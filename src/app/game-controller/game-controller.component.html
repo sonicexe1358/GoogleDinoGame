@@ -1,1 +1,14 @@
-<p>game-controller works!</p>
+<app-scoreboard [score]="score" [highScore]="highScore"></app-scoreboard>
+<app-ground [running]="isRunning" [speed]="speed"></app-ground>
+<app-dino [isRunning]="isRunning"></app-dino>
+<app-obstacle [isRunning]="isRunning"></app-obstacle>
+
+<div class="overlay" *ngIf="!isRunning && !gameOver">
+  <button (click)="startGame()">Start</button>
+</div>
+<div class="overlay" *ngIf="gameOver">
+  <div class="panel">
+    <h3>Game Over</h3>
+    <button (click)="restart()">Restart</button>
+  </div>
+</div>
