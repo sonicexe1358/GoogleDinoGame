@@ -1,0 +1,12 @@
+.ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 24px;
+  background: repeating-linear-gradient(
+    to right,
+    #757575 0px, #757575 20px,
+    #9e9e9e 20px, #9e9e9e 40px
+  );
+}
