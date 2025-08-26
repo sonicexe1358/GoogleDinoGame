@@ -1,0 +1,11 @@
+.dino {
+  position: absolute;
+  left: 60px;
+  width: 44px;
+  height: 44px;
+  background: #2e7d32;
+  border: 2px solid #1b5e20;
+  bottom: 0;
+  transition: height .05s linear;
+}
+.dino.crouch { height: 28px; }
