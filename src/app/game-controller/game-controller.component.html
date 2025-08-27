@@ -1,3 +1,4 @@
+<!-- Игра в процессе -->
 <div *ngIf="isRunning">
   <app-scoreboard [score]="score" [highScore]="highScore"></app-scoreboard>
   <app-ground [running]="isRunning"></app-ground>
@@ -22,7 +23,7 @@
 
       <label>
         Score Limit (required + min 100):
-        <input formControlName="scoreLimit" type="number">
+        <input formControlName="scoreLimit" type="number" readonly>
         <span *ngIf="resultForm.get('scoreLimit')?.errors?.['required'] && resultForm.get('scoreLimit')?.touched">
           Обязательное поле
         </span>
@@ -41,13 +42,16 @@
         <textarea formControlName="notes"></textarea>
       </label>
 
+      <!-- Вывод ошибки сервиса или проверки минимального результата -->
+      <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+
       <button type="submit">Save Result</button>
     </form>
   </div>
 </div>
 
 <!-- Список сохранённых результатов -->
-<div *ngIf="savedResults.length > 0">
+<div *ngIf="savedResults.length > 0" class="results-container">
   <h4>Saved Results:</h4>
   <ul>
     <li *ngFor="let r of savedResults">
@@ -56,7 +60,7 @@
   </ul>
 </div>
 
-<!-- Кнопка старта игры, если игра не запущена и нет формы сохранения -->
+<!-- Кнопка старта игры -->
 <div class="overlay" *ngIf="!isRunning && !gameOver">
   <button (click)="startGame()">Start Game</button>
 </div>

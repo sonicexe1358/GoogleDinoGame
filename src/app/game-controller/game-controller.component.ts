@@ -18,7 +18,19 @@ type Rect = { x: number; y: number; w: number; h: number };
 })
 export class GameControllerComponent {
   resultForm: FormGroup;
-  savedResults: { playerName: string; scoreLimit: number; level: string; notes: string; score: number }[] = [];
+  errorMessage: string | null = null;
+
+  isRunning = false;
+  gameOver = false;
+  score = 0;
+  highScore = 0;
+  speed = 2;
+  lastFrame = 0;
+  private loopHandle: number | null = null;
+  private scoreTimer = 0;
+
+  @ViewChild(DinoComponent) dino!: DinoComponent;
+  @ViewChild(ObstacleComponent) obstacle!: ObstacleComponent;
 
   constructor(private fb: FormBuilder, private resultService: ResultService) {
     this.resultForm = this.fb.group({
@@ -28,26 +40,6 @@ export class GameControllerComponent {
       notes: ['']
     });
   }
-
-  submitResult() {
-    if (this.resultForm.valid) {
-      console.log(this.resultForm.value);
-    } else {
-      console.log(this.resultForm.errors);
-    }
-  }
-
-  isRunning = false;
-  gameOver = false;
-  score = 0;
-  highScore = 0;
-  speed = 2;              // медленнее старт
-  lastFrame = 0;
-  private loopHandle: number | null = null;
-  private scoreTimer = 0; // таймер для подсчёта очков
-
-  @ViewChild(DinoComponent) dino!: DinoComponent;
-  @ViewChild(ObstacleComponent) obstacle!: ObstacleComponent;
 
   startGame() {
     this.isRunning = true;
@@ -64,7 +56,7 @@ export class GameControllerComponent {
       const dt = Math.min(32, t - this.lastFrame);
       this.lastFrame = t;
 
-      // обновляем счёт раз в 100 мс
+      // обновляем счёт
       this.scoreTimer += dt;
       if (this.scoreTimer >= 100) {
         this.score += Math.floor(this.scoreTimer / 100);
@@ -72,24 +64,24 @@ export class GameControllerComponent {
       }
       if (this.score > this.highScore) this.highScore = this.score;
 
-      // плавное ускорение: каждые 100 очков +0.002 к скорости
+      // плавное ускорение
       if (this.score > 0 && this.score % 100 === 0) {
         this.speed += 0.002;
       }
 
-      // двигаем препятствие
+      // двигаем препятствия
       if (this.obstacle) this.obstacle.tick(dt, this.speed);
 
       // проверяем коллизию
       if (this.dino && this.obstacle) {
-  const dinoBounds = this.dino.getBounds();
-  for (const obs of this.obstacle.obstacles) {
-    if (this.intersects(dinoBounds, obs)) {
-      this.endGame();
-      return;
-    }
-  }
-}
+        const dinoBounds = this.dino.getBounds();
+        for (const obs of this.obstacle.obstacles) {
+          if (this.intersects(dinoBounds, obs)) {
+            this.endGame();
+            return;
+          }
+        }
+      }
 
       this.loopHandle = requestAnimationFrame(loop);
     };
@@ -105,39 +97,40 @@ export class GameControllerComponent {
     this.isRunning = false;
     this.gameOver = true;
     if (this.loopHandle) cancelAnimationFrame(this.loopHandle);
+    this.resultForm.patchValue({ scoreLimit: this.score }); // автозаполнение текущего счета
   }
+
+  get savedResults() {
+  return this.resultService.getResults(); // метод сервиса, который возвращает массив GameResult
+}
 
   saveResult() {
-  const { playerName, scoreLimit, level, notes } = this.resultForm.value;
+    const { playerName, scoreLimit, level, notes } = this.resultForm.value;
+    const minScore = 100; // минимальный допустимый результат
 
-  // Проверка имени
-  if (!playerName || playerName.trim() === '') {
-    console.log('Введите имя игрока!');
-    return;
+    // Сбрасываем предыдущую ошибку
+    this.errorMessage = null;
+
+    // Проверка имени
+    if (!playerName || playerName.trim() === '') {
+      this.errorMessage = 'Ошибка: введите имя игрока!';
+      return;
+    }
+
+    // Проверка минимального результата
+    if (this.score < minScore) {
+      this.errorMessage = `Ошибка: ваш результат ${this.score} меньше минимального ${minScore}!`;
+      return;
+    }
+
+    // Если всё ок, сохраняем результат через сервис
+    const newResult: GameResult = { playerName, scoreLimit, level, notes, score: this.score };
+    this.resultService.addResult(newResult);
+
+    this.resultForm.reset();
+    this.gameOver = false;
+    this.errorMessage = null;
   }
-
-  // Проверка минимального результата
-  const minScore = 100; // допустим минимальный результат
-  if (this.score < minScore) {
-    console.log(`Ваш результат ${this.score} меньше минимального ${minScore}!`);
-    return;
-  }
-
-  // Если все условия выполнены, сохраняем результат
-  const newResult: GameResult = {
-    playerName,
-    scoreLimit,
-    level,
-    notes,
-    score: this.score
-  };
-
-  this.resultService.addResult(newResult);
-  console.log('Результат записан!', newResult);
-
-  this.resultForm.reset();
-  this.gameOver = false;
-}
 
   restart() {
     this.gameOver = false;
