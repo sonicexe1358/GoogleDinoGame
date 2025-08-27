@@ -7,7 +7,7 @@
 </div>
 
 <div class="fake-players-panel">
-  <button (click)="loadFakePlayers()">Load Fake Players</button>
+  <button (click)="loadFakePlayers()">Load Players</button>
   <ul *ngIf="fakePlayers.length > 0">
     <li *ngFor="let p of fakePlayers">
       {{ p.name }} — Score: {{ p.score }}
