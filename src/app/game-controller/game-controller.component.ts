@@ -38,7 +38,7 @@ export class GameControllerComponent implements OnInit {
   private loopHandle: number | null = null;
   private scoreTimer = 0;
 
-  private apiUrl = 'http://localhost:3000/results'; // замените на свой API
+  private apiUrl = 'http://localhost:3000/results';
 
   @ViewChild(DinoComponent) dino!: DinoComponent;
   @ViewChild(ObstacleComponent) obstacle!: ObstacleComponent;
