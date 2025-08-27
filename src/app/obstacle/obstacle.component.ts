@@ -1,6 +1,8 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+type Obstacle = { x: number; y: number; w: number; h: number };
+
 @Component({
   selector: 'app-obstacle',
   standalone: true,
@@ -10,36 +12,54 @@ import { CommonModule } from '@angular/common';
 })
 export class ObstacleComponent {
   @Input() isRunning = false;
-  x = 820;
-  h = 40;
-  w = 20;
-  y = 0;
 
+  // массив препятствий
+  obstacles: Obstacle[] = [
+    this.createRandomObstacle(820),
+    this.createRandomObstacle(1200)
+  ];
+
+  /** Двигаем все препятствия */
   tick(dt: number, speed: number) {
     if (!this.isRunning) return;
-    this.x -= speed * (dt / 16) * 4;
-    if (this.x < -this.w) {
-      this.randomize();
-      this.x = 820;
-    }
+    this.obstacles.forEach(obs => {
+      obs.x -= speed * (dt / 16) * 4;
+      if (obs.x < -obs.w) {
+        // возвращаем вправо + чуть дальше, чтобы не слипались
+        obs.x = 820 + Math.random() * 300;
+        const newObs = this.randomize();
+        obs.w = newObs.w;
+        obs.h = newObs.h;
+        obs.y = newObs.y;
+      }
+    });
   }
 
-  randomize() {
-    // случайный тип препятствия
+  /** Генерация случайного типа */
+  randomize(): Obstacle {
     const types = [
-      { w: 20, h: 40, y: 0 },   // кактус
-      { w: 28, h: 60, y: 0 },   // высокий кактус
-      { w: 40, h: 28, y: 60 }   // птица
+      { w: 20, h: 40, y: 0, x: 0 },   // низкий кактус
+      { w: 28, h: 60, y: 0, x: 0 },   // высокий кактус
+      { w: 40, h: 28, y: 60, x: 0 }   // птица
     ];
-    const t = types[Math.floor(Math.random()*types.length)];
-    this.w = t.w; this.h = t.h; this.y = t.y;
+    return types[Math.floor(Math.random() * types.length)];
   }
 
-  getBounds() {
-    return { x: this.x, y: this.y, w: this.w, h: this.h };
+  /** Создать препятствие на определённой позиции */
+  private createRandomObstacle(x: number): Obstacle {
+    const base = this.randomize();
+    return { x, y: base.y, w: base.w, h: base.h };
+  }
+
+  /** Для коллизии (проверяем первое ближайшее) */
+  getBounds(): Obstacle {
+    return this.obstacles[0]; // можно доработать на ближайший
   }
 
   reset() {
-  this.x = 800;  // например, за пределами экрана
-}
+    this.obstacles = [
+      this.createRandomObstacle(820),
+      this.createRandomObstacle(1200)
+    ];
+  }
 }

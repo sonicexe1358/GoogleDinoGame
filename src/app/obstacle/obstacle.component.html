@@ -1,1 +1,8 @@
-<div class="obstacle" [style.left.px]="x" [style.bottom.px]="y" [style.width.px]="w" [style.height.px]="h"></div>
+<div 
+  class="obstacle" 
+  *ngFor="let obs of obstacles"
+  [style.left.px]="obs.x" 
+  [style.bottom.px]="obs.y" 
+  [style.width.px]="obs.w" 
+  [style.height.px]="obs.h">
+</div>

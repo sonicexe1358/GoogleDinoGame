@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 export class GroundComponent {
   @Input() running = false;
   @Input() speed = 6;
-  x = 0;
+  offset = 0;
   private raf: number | null = null;
   private last = performance.now();
 
@@ -19,12 +19,17 @@ export class GroundComponent {
     const loop = (t: number) => {
       const dt = Math.min(32, t - this.last);
       this.last = t;
+
       if (this.running) {
-        this.x = (this.x - this.speed * (dt / 16) * 4) % 80;
+        this.offset = (this.offset - this.speed * (dt / 16) * 4) % 240; 
+        // 240 — ширина тайла, подгони под размер своей земли
       }
+
       this.raf = requestAnimationFrame(loop);
     };
+
     this.raf = requestAnimationFrame(loop);
   }
+  
   ngOnDestroy() { if (this.raf) cancelAnimationFrame(this.raf); }
 }

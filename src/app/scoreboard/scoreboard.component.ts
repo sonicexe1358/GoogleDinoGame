@@ -11,4 +11,6 @@ import { CommonModule } from '@angular/common';
 export class ScoreboardComponent {
   @Input() score = 0;
   @Input() highScore = 0;
+
+  mode: 'score' | 'high' = 'score';
 }

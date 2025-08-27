@@ -1,4 +1,4 @@
-<div class="scoreboard">
-  <div>Score: {{ score }}</div>
-  <div>Best: {{ highScore }}</div>
+<div [ngSwitch]="mode">
+  <span *ngSwitchCase="'score'">Score: {{ score }}</span>
+  <span *ngSwitchCase="'high'">High Score: {{ highScore }}</span>
 </div>

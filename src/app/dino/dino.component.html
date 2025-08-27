@@ -1,1 +1,5 @@
-<div class="dino" [class.crouch]="false" [style.bottom.px]="bottom"></div>
+<div 
+  class="dino" 
+  [ngClass]="{ 'jumping': isJumping }" 
+  [style.bottom.px]="bottom">
+</div>
