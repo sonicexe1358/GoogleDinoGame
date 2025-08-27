@@ -52,8 +52,8 @@ export class ObstacleComponent {
   }
 
   /** Для коллизии (проверяем первое ближайшее) */
-  getBounds(): Obstacle {
-    return this.obstacles[0]; // можно доработать на ближайший
+  getBounds(): Obstacle []{
+    return this.obstacles; // можно доработать на ближайший
   }
 
   reset() {

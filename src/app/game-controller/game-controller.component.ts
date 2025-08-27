@@ -60,13 +60,14 @@ export class GameControllerComponent {
 
       // проверяем коллизию
       if (this.dino && this.obstacle) {
-        const a = this.dino.getBounds();
-        const b = this.obstacle.getBounds();
-        if (this.intersects(a, b)) {
-          this.endGame();
-          return;
-        }
-      }
+  const dinoBounds = this.dino.getBounds();
+  for (const obs of this.obstacle.obstacles) {
+    if (this.intersects(dinoBounds, obs)) {
+      this.endGame();
+      return;
+    }
+  }
+}
 
       this.loopHandle = requestAnimationFrame(loop);
     };
