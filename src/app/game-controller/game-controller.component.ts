@@ -1,20 +1,42 @@
 import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DinoComponent } from '../dino/dino.component';
+import { ResultService, GameResult } from '../result.service';
 import { ObstacleComponent } from '../obstacle/obstacle.component';
 import { GroundComponent } from '../ground/ground.component';
 import { ScoreboardComponent } from '../scoreboard/scoreboard.component';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
 type Rect = { x: number; y: number; w: number; h: number };
 
 @Component({
   selector: 'app-game-controller',
   standalone: true,
-  imports: [CommonModule, DinoComponent, ObstacleComponent, GroundComponent, ScoreboardComponent],
+  imports: [CommonModule, DinoComponent, ObstacleComponent, GroundComponent, ScoreboardComponent, ReactiveFormsModule],
   templateUrl: './game-controller.component.html',
   styleUrls: ['./game-controller.component.css']
 })
 export class GameControllerComponent {
+  resultForm: FormGroup;
+  savedResults: { playerName: string; scoreLimit: number; level: string; notes: string; score: number }[] = [];
+
+  constructor(private fb: FormBuilder, private resultService: ResultService) {
+    this.resultForm = this.fb.group({
+      playerName: ['', Validators.required],
+      scoreLimit: ['', [Validators.required, Validators.min(100)]],
+      level: [''],
+      notes: ['']
+    });
+  }
+
+  submitResult() {
+    if (this.resultForm.valid) {
+      console.log(this.resultForm.value);
+    } else {
+      console.log(this.resultForm.errors);
+    }
+  }
+
   isRunning = false;
   gameOver = false;
   score = 0;
@@ -84,6 +106,38 @@ export class GameControllerComponent {
     this.gameOver = true;
     if (this.loopHandle) cancelAnimationFrame(this.loopHandle);
   }
+
+  saveResult() {
+  const { playerName, scoreLimit, level, notes } = this.resultForm.value;
+
+  // Проверка имени
+  if (!playerName || playerName.trim() === '') {
+    console.log('Введите имя игрока!');
+    return;
+  }
+
+  // Проверка минимального результата
+  const minScore = 100; // допустим минимальный результат
+  if (this.score < minScore) {
+    console.log(`Ваш результат ${this.score} меньше минимального ${minScore}!`);
+    return;
+  }
+
+  // Если все условия выполнены, сохраняем результат
+  const newResult: GameResult = {
+    playerName,
+    scoreLimit,
+    level,
+    notes,
+    score: this.score
+  };
+
+  this.resultService.addResult(newResult);
+  console.log('Результат записан!', newResult);
+
+  this.resultForm.reset();
+  this.gameOver = false;
+}
 
   restart() {
     this.gameOver = false;

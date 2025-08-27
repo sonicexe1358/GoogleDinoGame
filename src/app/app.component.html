@@ -1,6 +1,17 @@
 <div class="game-container">
   <app-game-controller></app-game-controller>
 </div>
+
 <div class="controls">
   <p>Управление: пробел или ↑ — прыжок. ↓ — (псевдо)присед.</p>
+</div>
+
+<!-- Список сохранённых результатов -->
+<div *ngIf="savedResults.length > 0" class="results-container">
+  <h4>Saved Results:</h4>
+  <ul>
+    <li *ngFor="let r of savedResults">
+      {{ r.playerName }} — Score: {{ r.score }} — Level: {{ r.level }} — Notes: {{ r.notes }}
+    </li>
+  </ul>
 </div>

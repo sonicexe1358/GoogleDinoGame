@@ -1,14 +1,62 @@
-<app-scoreboard [score]="score" [highScore]="highScore"></app-scoreboard>
-<app-ground [running]="isRunning" [speed]="speed"></app-ground>
-<app-dino [isRunning]="isRunning"></app-dino>
-<app-obstacle [isRunning]="isRunning"></app-obstacle>
-
-<div class="overlay" *ngIf="!isRunning && !gameOver">
-  <button (click)="startGame()">Start</button>
+<div *ngIf="isRunning">
+  <app-scoreboard [score]="score" [highScore]="highScore"></app-scoreboard>
+  <app-ground [running]="isRunning"></app-ground>
+  <app-dino [isRunning]="isRunning"></app-dino>
+  <app-obstacle [isRunning]="isRunning"></app-obstacle>
 </div>
+
+<!-- Форма после проигрыша -->
 <div class="overlay" *ngIf="gameOver">
   <div class="panel">
     <h3>Game Over</h3>
-    <button (click)="restart()">Restart</button>
+    <p>Your score: {{ score }}</p>
+
+    <form [formGroup]="resultForm" (ngSubmit)="saveResult()">
+      <label>
+        Player Name (required):
+        <input formControlName="playerName">
+        <span *ngIf="resultForm.get('playerName')?.invalid && resultForm.get('playerName')?.touched">
+          Это поле обязательно
+        </span>
+      </label>
+
+      <label>
+        Score Limit (required + min 100):
+        <input formControlName="scoreLimit" type="number">
+        <span *ngIf="resultForm.get('scoreLimit')?.errors?.['required'] && resultForm.get('scoreLimit')?.touched">
+          Обязательное поле
+        </span>
+        <span *ngIf="resultForm.get('scoreLimit')?.errors?.['min'] && resultForm.get('scoreLimit')?.touched">
+          Минимальное значение 100
+        </span>
+      </label>
+
+      <label>
+        Level:
+        <input formControlName="level" type="text">
+      </label>
+
+      <label>
+        Notes:
+        <textarea formControlName="notes"></textarea>
+      </label>
+
+      <button type="submit">Save Result</button>
+    </form>
   </div>
+</div>
+
+<!-- Список сохранённых результатов -->
+<div *ngIf="savedResults.length > 0">
+  <h4>Saved Results:</h4>
+  <ul>
+    <li *ngFor="let r of savedResults">
+      {{ r.playerName }} — Score: {{ r.score }} — Score Limit: {{ r.scoreLimit }} — Level: {{ r.level }} — Notes: {{ r.notes }}
+    </li>
+  </ul>
+</div>
+
+<!-- Кнопка старта игры, если игра не запущена и нет формы сохранения -->
+<div class="overlay" *ngIf="!isRunning && !gameOver">
+  <button (click)="startGame()">Start Game</button>
 </div>
