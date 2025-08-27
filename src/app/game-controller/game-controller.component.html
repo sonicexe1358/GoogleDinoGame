@@ -50,16 +50,6 @@
   </div>
 </div>
 
-<!-- Список сохранённых результатов -->
-<div *ngIf="savedResults.length > 0" class="results-container">
-  <h4>Saved Results:</h4>
-  <ul>
-    <li *ngFor="let r of savedResults">
-      {{ r.playerName }} — Score: {{ r.score }} — Score Limit: {{ r.scoreLimit }} — Level: {{ r.level }} — Notes: {{ r.notes }}
-    </li>
-  </ul>
-</div>
-
 <!-- Кнопка старта игры -->
 <div class="overlay" *ngIf="!isRunning && !gameOver">
   <button (click)="startGame()">Start Game</button>

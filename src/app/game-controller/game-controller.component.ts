@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DinoComponent } from '../dino/dino.component';
 import { ResultService, GameResult } from '../result.service';
@@ -6,17 +6,26 @@ import { ObstacleComponent } from '../obstacle/obstacle.component';
 import { GroundComponent } from '../ground/ground.component';
 import { ScoreboardComponent } from '../scoreboard/scoreboard.component';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 type Rect = { x: number; y: number; w: number; h: number };
 
 @Component({
   selector: 'app-game-controller',
   standalone: true,
-  imports: [CommonModule, DinoComponent, ObstacleComponent, GroundComponent, ScoreboardComponent, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    DinoComponent,
+    ObstacleComponent,
+    GroundComponent,
+    ScoreboardComponent,
+    ReactiveFormsModule,
+    HttpClientModule
+  ],
   templateUrl: './game-controller.component.html',
   styleUrls: ['./game-controller.component.css']
 })
-export class GameControllerComponent {
+export class GameControllerComponent implements OnInit {
   resultForm: FormGroup;
   errorMessage: string | null = null;
 
@@ -29,15 +38,36 @@ export class GameControllerComponent {
   private loopHandle: number | null = null;
   private scoreTimer = 0;
 
+  private apiUrl = 'http://localhost:3000/results'; // замените на свой API
+
   @ViewChild(DinoComponent) dino!: DinoComponent;
   @ViewChild(ObstacleComponent) obstacle!: ObstacleComponent;
 
-  constructor(private fb: FormBuilder, private resultService: ResultService) {
+  constructor(
+    private fb: FormBuilder,
+    private resultService: ResultService,
+    private http: HttpClient
+  ) {
     this.resultForm = this.fb.group({
       playerName: ['', Validators.required],
       scoreLimit: ['', [Validators.required, Validators.min(100)]],
       level: [''],
       notes: ['']
+    });
+  }
+
+  ngOnInit() {
+    this.fetchSavedResultsFromAPI();
+  }
+
+  /** Получение сохранённых результатов с внешнего API */
+  fetchSavedResultsFromAPI() {
+    this.http.get<GameResult[]>(this.apiUrl).subscribe({
+      next: (results) => {
+        // добавляем результаты из API в локальный сервис
+        results.forEach(r => this.resultService.addResult(r));
+      },
+      error: (err) => console.error('Ошибка загрузки результатов с API:', err)
     });
   }
 
@@ -56,7 +86,6 @@ export class GameControllerComponent {
       const dt = Math.min(32, t - this.lastFrame);
       this.lastFrame = t;
 
-      // обновляем счёт
       this.scoreTimer += dt;
       if (this.scoreTimer >= 100) {
         this.score += Math.floor(this.scoreTimer / 100);
@@ -64,15 +93,12 @@ export class GameControllerComponent {
       }
       if (this.score > this.highScore) this.highScore = this.score;
 
-      // плавное ускорение
       if (this.score > 0 && this.score % 100 === 0) {
         this.speed += 0.002;
       }
 
-      // двигаем препятствия
       if (this.obstacle) this.obstacle.tick(dt, this.speed);
 
-      // проверяем коллизию
       if (this.dino && this.obstacle) {
         const dinoBounds = this.dino.getBounds();
         for (const obs of this.obstacle.obstacles) {
@@ -97,39 +123,49 @@ export class GameControllerComponent {
     this.isRunning = false;
     this.gameOver = true;
     if (this.loopHandle) cancelAnimationFrame(this.loopHandle);
-    this.resultForm.patchValue({ scoreLimit: this.score }); // автозаполнение текущего счета
+    this.resultForm.patchValue({ scoreLimit: this.score });
   }
 
   get savedResults() {
-  return this.resultService.getResults(); // метод сервиса, который возвращает массив GameResult
-}
+    return this.resultService.getResults();
+  }
 
+  /** Сохранение результата игры */
   saveResult() {
-    const { playerName, scoreLimit, level, notes } = this.resultForm.value;
-    const minScore = 100; // минимальный допустимый результат
+    const { playerName, level, notes } = this.resultForm.value;
+    const minScore = 100;
 
-    // Сбрасываем предыдущую ошибку
     this.errorMessage = null;
 
-    // Проверка имени
-    if (!playerName || playerName.trim() === '') {
+    if (!playerName?.trim()) {
       this.errorMessage = 'Ошибка: введите имя игрока!';
       return;
     }
 
-    // Проверка минимального результата
     if (this.score < minScore) {
       this.errorMessage = `Ошибка: ваш результат ${this.score} меньше минимального ${minScore}!`;
       return;
     }
 
-    // Если всё ок, сохраняем результат через сервис
-    const newResult: GameResult = { playerName, scoreLimit, level, notes, score: this.score };
+    const newResult: GameResult = {
+      playerName,
+      scoreLimit: this.score,
+      level,
+      notes,
+      score: this.score
+    };
+
+    // Сохраняем локально через сервис
     this.resultService.addResult(newResult);
+
+    // Отправка на внешний API
+    this.http.post<GameResult>(this.apiUrl, newResult).subscribe({
+      next: res => console.log('Результат отправлен на сервер', res),
+      error: err => console.error('Ошибка отправки результата на сервер', err)
+    });
 
     this.resultForm.reset();
     this.gameOver = false;
-    this.errorMessage = null;
   }
 
   restart() {
