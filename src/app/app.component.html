@@ -1,12 +1,20 @@
 <div class="game-container">
-  <app-game-controller></app-game-controller>
+  <app-game-controller #gameController (fakePlayersLoaded)="onFakePlayersLoaded($event)"></app-game-controller>
 </div>
 
 <div class="controls">
   <p>Управление: пробел или ↑ — прыжок. ↓ — (псевдо)присед.</p>
 </div>
 
-<!-- Список сохранённых результатов -->
+<div class="fake-players-panel">
+  <button (click)="loadFakePlayers()">Load Fake Players</button>
+  <ul *ngIf="fakePlayers.length > 0">
+    <li *ngFor="let p of fakePlayers">
+      {{ p.name }} — Score: {{ p.score }}
+    </li>
+  </ul>
+</div>
+
 <div *ngIf="savedResults.length > 0" class="results-container">
   <h4>Saved Results:</h4>
   <ul>

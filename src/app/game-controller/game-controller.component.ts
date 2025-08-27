@@ -1,4 +1,4 @@
-import { Component, ViewChild, OnInit } from '@angular/core';
+import { Component, ViewChild, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DinoComponent } from '../dino/dino.component';
 import { ResultService, GameResult } from '../result.service';
@@ -9,6 +9,11 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 type Rect = { x: number; y: number; w: number; h: number };
+
+interface FakePlayer {
+  name: string;
+  score: number;
+}
 
 @Component({
   selector: 'app-game-controller',
@@ -25,10 +30,12 @@ type Rect = { x: number; y: number; w: number; h: number };
   templateUrl: './game-controller.component.html',
   styleUrls: ['./game-controller.component.css']
 })
-export class GameControllerComponent implements OnInit {
+export class GameControllerComponent {
+  @Output() fakePlayersLoaded = new EventEmitter<FakePlayer[]>();
   resultForm: FormGroup;
   errorMessage: string | null = null;
 
+  fakePlayers: FakePlayer[] = [];
   isRunning = false;
   gameOver = false;
   score = 0;
@@ -38,36 +45,15 @@ export class GameControllerComponent implements OnInit {
   private loopHandle: number | null = null;
   private scoreTimer = 0;
 
-  private apiUrl = 'http://localhost:3000/results';
-
   @ViewChild(DinoComponent) dino!: DinoComponent;
   @ViewChild(ObstacleComponent) obstacle!: ObstacleComponent;
 
-  constructor(
-    private fb: FormBuilder,
-    private resultService: ResultService,
-    private http: HttpClient
-  ) {
+  constructor(private fb: FormBuilder, private resultService: ResultService, private http: HttpClient) {
     this.resultForm = this.fb.group({
       playerName: ['', Validators.required],
       scoreLimit: ['', [Validators.required, Validators.min(100)]],
       level: [''],
       notes: ['']
-    });
-  }
-
-  ngOnInit() {
-    this.fetchSavedResultsFromAPI();
-  }
-
-  /** Получение сохранённых результатов с внешнего API */
-  fetchSavedResultsFromAPI() {
-    this.http.get<GameResult[]>(this.apiUrl).subscribe({
-      next: (results) => {
-        // добавляем результаты из API в локальный сервис
-        results.forEach(r => this.resultService.addResult(r));
-      },
-      error: (err) => console.error('Ошибка загрузки результатов с API:', err)
     });
   }
 
@@ -93,9 +79,7 @@ export class GameControllerComponent implements OnInit {
       }
       if (this.score > this.highScore) this.highScore = this.score;
 
-      if (this.score > 0 && this.score % 100 === 0) {
-        this.speed += 0.002;
-      }
+      if (this.score > 0 && this.score % 100 === 0) this.speed += 0.002;
 
       if (this.obstacle) this.obstacle.tick(dt, this.speed);
 
@@ -130,14 +114,12 @@ export class GameControllerComponent implements OnInit {
     return this.resultService.getResults();
   }
 
-  /** Сохранение результата игры */
   saveResult() {
-    const { playerName, level, notes } = this.resultForm.value;
+    const { playerName, scoreLimit, level, notes } = this.resultForm.value;
     const minScore = 100;
-
     this.errorMessage = null;
 
-    if (!playerName?.trim()) {
+    if (!playerName || playerName.trim() === '') {
       this.errorMessage = 'Ошибка: введите имя игрока!';
       return;
     }
@@ -147,25 +129,14 @@ export class GameControllerComponent implements OnInit {
       return;
     }
 
-    const newResult: GameResult = {
-      playerName,
-      scoreLimit: this.score,
-      level,
-      notes,
-      score: this.score
-    };
-
-    // Сохраняем локально через сервис
+    const newResult: GameResult = { playerName, scoreLimit, level, notes, score: this.score };
     this.resultService.addResult(newResult);
 
-    // Отправка на внешний API
-    this.http.post<GameResult>(this.apiUrl, newResult).subscribe({
-      next: res => console.log('Результат отправлен на сервер', res),
-      error: err => console.error('Ошибка отправки результата на сервер', err)
-    });
+    this.sendResultToFakeAPI(newResult);
 
     this.resultForm.reset();
     this.gameOver = false;
+    this.errorMessage = null;
   }
 
   restart() {
@@ -178,5 +149,29 @@ export class GameControllerComponent implements OnInit {
     if (this.obstacle) this.obstacle.reset?.();
 
     this.startGame();
+  }
+
+  loadFakePlayers() {
+    this.http.get<any>('https://fakerapi.it/api/v1/users?_quantity=5&_locale=ru_RU')
+      .subscribe({
+        next: (res) => {
+          this.fakePlayers = res.data.map((u: any) => ({
+            name: `${u.firstname} ${u.lastname}`,
+            score: Math.floor(Math.random() * 900) + 100
+          }));
+          this.fakePlayersLoaded.emit(this.fakePlayers);
+        },
+        error: (err) => console.error('Ошибка при GET:', err)
+      });
+  }
+
+
+  sendResultToFakeAPI(result: GameResult) {
+    const payload: FakePlayer = { name: result.playerName, score: result.score };
+    this.http.post('https://fakerapi.it/api/v1/users', payload)
+      .subscribe({
+        next: (res) => console.log('POST response:', res),
+        error: (err) => console.error('Ошибка при POST:', err)
+      });
   }
 }
