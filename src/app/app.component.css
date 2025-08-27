@@ -1,0 +1,11 @@
+.game-container {
+  position: absolute;
+  top: 60%;               /* чуть ниже середины экрана */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px;           /* ширина игрового поля */
+  height: 200px;          /* высота игрового поля */
+  border: 1px solid #ccc; /* рамка (для наглядности) */
+  background: #fff;       /* фон поля */
+  overflow: hidden;
+}
