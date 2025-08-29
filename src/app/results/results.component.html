@@ -1,0 +1,32 @@
+<div class="fake-players-panel">
+  <button (click)="loadFakePlayers()">Load Players</button>
+  <app-game-controller
+    #gameController
+    (fakePlayersLoaded)="onFakePlayersLoaded($event)"
+    hidden>
+  </app-game-controller>
+
+  <ul *ngIf="fakePlayers.length > 0; else noPlayers">
+    <li *ngFor="let p of fakePlayers">
+      {{ p.name }} — Score: {{ p.score }}
+    </li>
+  </ul>
+  <ng-template #noPlayers>
+    <p>No players loaded.</p>
+  </ng-template>
+</div>
+
+<hr />
+
+<div *ngIf="savedResults.length > 0; else noResults" class="results-container">
+  <h4>Saved Results:</h4>
+  <ul>
+    <li *ngFor="let r of savedResults">
+      {{ r.playerName }} — Score: {{ r.score }} — Level: {{ r.level }} — Notes: {{ r.notes }}
+    </li>
+  </ul>
+</div>
+
+<ng-template #noResults>
+  <p>No saved results yet.</p>
+</ng-template>

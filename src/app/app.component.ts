@@ -1,43 +1,14 @@
-import { Component, ViewChild, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { GameControllerComponent } from './game-controller/game-controller.component';
-import { ResultService, GameResult } from './result.service';
-
-interface FakePlayer {
-  name: string;
-  score: number;
-}
+import { RouterOutlet, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, GameControllerComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit {
+export class AppComponent {
   title = 'GoogleDinoGame';
-
-  @ViewChild('gameController') gameController!: GameControllerComponent;
-
-  savedResults: GameResult[] = [];
-  fakePlayers: FakePlayer[] = [];
-
-  constructor(private resultService: ResultService) {}
-
-  ngOnInit() {
-    this.resultService.results$.subscribe(results => {
-      this.savedResults = results;
-    });
-  }
-
-  onFakePlayersLoaded(players: FakePlayer[]) {
-    this.fakePlayers = players;
-  }
-
-  loadFakePlayers() {
-    this.gameController.loadFakePlayers();
-  }
 }
-

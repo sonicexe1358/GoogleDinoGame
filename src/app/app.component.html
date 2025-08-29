@@ -1,25 +1,8 @@
-<div class="game-container">
-  <app-game-controller #gameController (fakePlayersLoaded)="onFakePlayersLoaded($event)"></app-game-controller>
-</div>
+<h1>{{ title }}</h1>
 
-<div class="controls">
-  <p>Управление: пробел или ↑ — прыжок. ↓ — (псевдо)присед.</p>
-</div>
+<nav>
+  <a routerLink="/">Game</a> |
+  <a routerLink="/results">Results</a>
+</nav>
 
-<div class="fake-players-panel">
-  <button (click)="loadFakePlayers()">Load Players</button>
-  <ul *ngIf="fakePlayers.length > 0">
-    <li *ngFor="let p of fakePlayers">
-      {{ p.name }} — Score: {{ p.score }}
-    </li>
-  </ul>
-</div>
-
-<div *ngIf="savedResults.length > 0" class="results-container">
-  <h4>Saved Results:</h4>
-  <ul>
-    <li *ngFor="let r of savedResults">
-      {{ r.playerName }} — Score: {{ r.score }} — Level: {{ r.level }} — Notes: {{ r.notes }}
-    </li>
-  </ul>
-</div>
+<router-outlet></router-outlet>

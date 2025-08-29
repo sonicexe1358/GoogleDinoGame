@@ -1,0 +1,14 @@
+<div class="game-container">
+  <app-game-controller #gameController></app-game-controller>
+
+    <button
+    *ngIf="!isGameRunning"
+    class="start-btn"
+    (click)="startGame()">
+    Start Game
+  </button>
+</div>
+
+<div class="controls">
+  <p>Управление: пробел или ↑ — прыжок. ↓ — (псевдо)присед.</p>
+</div>
